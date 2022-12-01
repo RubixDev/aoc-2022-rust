@@ -1,8 +1,7 @@
 pub fn main() {
     let mut input = include_str!("../inputs/day1.txt")
-        .trim()
         .split("\n\n")
-        .map(|inv| inv.split('\n').map(|cnt| cnt.parse::<u64>().unwrap()).sum())
+        .map(|inv| inv.lines().map(|cnt| cnt.parse::<u64>().unwrap()).sum())
         .collect::<Vec<_>>();
     println!("--- Day 1 ---");
     println!("Part 1: {}", part1(&input));
