@@ -26,7 +26,7 @@ pub fn main() {
             )
         })
         .collect();
-    println!("--- Day 3 ---");
+    println!("--- Day 5 ---");
     println!("Part 1: {}", part1(&stack_input, &instruction_input));
     println!("Part 2: {}", part2(&stack_input, &instruction_input));
     println!();

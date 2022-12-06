@@ -9,7 +9,7 @@ pub fn main() {
         .tuples()
         .map(|(start, end)| start.parse().unwrap()..=end.parse().unwrap())
         .collect();
-    println!("--- Day 3 ---");
+    println!("--- Day 4 ---");
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
     println!();
