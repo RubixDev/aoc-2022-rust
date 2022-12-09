@@ -1,7 +1,10 @@
 use std::{collections::VecDeque, thread, time::Duration};
 
 const DEBUG: bool = false;
-const DEBUG_SLEEP_MILLIS: u64 = 1000;
+const DEBUG_SLEEP_MILLIS: u64 = 5;
+const DEBUG_WIDTH: usize = 200;
+const DEBUG_HEIGHT: usize = 45;
+const DEBUG_PADDING: (usize, usize) = (DEBUG_WIDTH / 6, DEBUG_HEIGHT / 6);
 const TEST_INPUT: InputKind = InputKind::Actual;
 
 #[allow(dead_code)]
@@ -68,10 +71,15 @@ fn do_motion(
     motion: &Motion,
     positions: &mut [(usize, usize)],
     visited_cells: &mut VecDeque<VecDeque<bool>>,
-) {
+) -> (bool, bool, bool, bool) {
+    let mut new_front_x = false;
+    let mut new_front_y = false;
+    let mut new_back_x = false;
+    let mut new_back_y = false;
     match motion {
         Motion::Up => {
             if visited_cells.get(positions[0].1.wrapping_sub(1)).is_none() {
+                new_front_y = true;
                 for pos in positions.iter_mut() {
                     pos.1 += 1;
                 }
@@ -81,6 +89,7 @@ fn do_motion(
         }
         Motion::Down => {
             if visited_cells.get(positions[0].1 + 1).is_none() {
+                new_back_y = true;
                 visited_cells.push_back(VecDeque::from(vec![false; visited_cells[0].len()]));
             }
             positions[0].1 += 1;
@@ -90,6 +99,7 @@ fn do_motion(
                 .get(positions[0].0.wrapping_sub(1))
                 .is_none()
             {
+                new_front_x = true;
                 for pos in positions.iter_mut() {
                     pos.0 += 1;
                 }
@@ -104,6 +114,7 @@ fn do_motion(
                 .get(positions[0].0 + 1)
                 .is_none()
             {
+                new_back_x = true;
                 for row in visited_cells {
                     row.push_back(false);
                 }
@@ -111,6 +122,7 @@ fn do_motion(
             positions[0].0 += 1;
         }
     }
+    (new_front_x, new_front_y, new_back_x, new_back_y)
 }
 
 fn part1(input: &[(Motion, usize)]) -> usize {
@@ -143,9 +155,13 @@ fn part2(input: &[(Motion, usize)]) -> usize {
         // clear screen and hide cursor
         print!("\x1b[2J\x1b[?25l");
     }
+    let mut dbg_x_offset = positions[0].0.wrapping_sub(DEBUG_WIDTH / 2);
+    let mut dbg_y_offset = positions[0].1.wrapping_sub(DEBUG_HEIGHT / 2);
+
     for (motion, count) in input {
         for _ in 0..*count {
-            do_motion(motion, &mut positions, &mut visited_cells);
+            let (new_front_x, new_front_y, new_back_x, new_back_y) =
+                do_motion(motion, &mut positions, &mut visited_cells);
             for idx in 0..positions.len() - 1 {
                 let (moved, to_move) = (positions[idx], &mut positions[idx + 1]);
 
@@ -175,56 +191,81 @@ fn part2(input: &[(Motion, usize)]) -> usize {
             if DEBUG {
                 // go to top left corner
                 print!("\x1b[H");
-                const X_SIZE: usize = 60;
-                const Y_SIZE: usize = 15;
-                let (x, y) = positions[0];
-                let x_len = visited_cells[0].len();
-                let y_len = visited_cells.len();
-                let x_range = match x_len <= X_SIZE * 2 {
-                    true => 0..x_len,
-                    false => match x {
-                        0..=X_SIZE => 0..x_len.min(X_SIZE * 2),
-                        _ => (x - X_SIZE)..x_len.min(x + X_SIZE),
-                    },
-                };
-                let y_range = match y_len <= Y_SIZE * 2 {
-                    true => 0..y_len,
-                    false => match y {
-                        0..=Y_SIZE => 0..y_len.min(Y_SIZE * 2),
-                        _ => (y - Y_SIZE)..y_len.min(y + Y_SIZE),
-                    },
-                };
 
-                let border = "-".repeat(x_range.len() + 2);
-                // print upper border and clear rest of line
-                println!("{border}\x1b[K");
-                for y in y_range {
-                    // left border
-                    print!("|");
-                    for x in x_range.clone() {
-                        match positions.iter().position(|pos| *pos == (x, y)) {
-                            // bold green `H` for head
-                            Some(0) => print!("\x1b[1;32mH\x1b[0m"),
-                            // bold white number
-                            Some(idx) => print!("\x1b[1m{idx}\x1b[0m"),
-                            None => match visited_cells[y][x] {
-                                // light gray `#` for visited cells
-                                true => print!("\x1b[90m#\x1b[0m"),
-                                // dark gray `.` for everything else
-                                false => print!("\x1b[30m.\x1b[0m"),
-                            },
+                let border = "-".repeat(DEBUG_WIDTH);
+                println!("\x1b[1m+{border}+\x1b[0m");
+
+                let (head_x, head_y) = positions[0];
+
+                if new_front_x {
+                    dbg_x_offset = dbg_x_offset.wrapping_add(1);
+                } else if new_front_y {
+                    dbg_y_offset = dbg_y_offset.wrapping_add(1);
+                }
+
+                if head_x.wrapping_sub(dbg_x_offset) <= DEBUG_PADDING.0 {
+                    dbg_x_offset = dbg_x_offset.wrapping_sub(1);
+                } else if head_x.wrapping_sub(dbg_x_offset) >= DEBUG_WIDTH - DEBUG_PADDING.0 {
+                    dbg_x_offset = dbg_x_offset.wrapping_add(1);
+                } else if head_y.wrapping_sub(dbg_y_offset) <= DEBUG_PADDING.1 {
+                    dbg_y_offset = dbg_y_offset.wrapping_sub(1);
+                } else if head_y.wrapping_sub(dbg_y_offset) >= DEBUG_HEIGHT - DEBUG_PADDING.1 {
+                    dbg_y_offset = dbg_y_offset.wrapping_add(1);
+                }
+
+                for y in 0..DEBUG_HEIGHT {
+                    print!("\x1b[1m|\x1b[0m");
+                    for x in 0..DEBUG_WIDTH {
+                        let (pos_x, pos_y) =
+                            (x.wrapping_add(dbg_x_offset), y.wrapping_add(dbg_y_offset));
+
+                        match visited_cells.get(pos_y).and_then(|row| row.get(pos_x)) {
+                            Some(visited) => {
+                                match positions.iter().position(|pos| *pos == (pos_x, pos_y)) {
+                                    // bold green `H` for head
+                                    Some(0) => print!("\x1b[1;32mH\x1b[0m"),
+                                    // bold white number
+                                    Some(idx) => print!("\x1b[1m{idx}\x1b[0m"),
+                                    None => match visited {
+                                        // light gray `#` for visited cells
+                                        true => print!("\x1b[90m#\x1b[0m"),
+                                        // bold green `×` for new cells
+                                        false
+                                            if (new_front_x && pos_x == 0)
+                                                || (new_front_y && pos_y == 0)
+                                                || (new_back_x
+                                                    && pos_x == visited_cells[0].len() - 1)
+                                                || (new_back_y
+                                                    && pos_y == visited_cells.len() - 1) =>
+                                        {
+                                            print!("\x1b[1;32m×\x1b[0m")
+                                        }
+                                        // dark gray `×` for everything else
+                                        false => print!("\x1b[30m×\x1b[0m"),
+                                    },
+                                }
+                            }
+                            None if ((pos_x == usize::MAX || pos_x == visited_cells[0].len())
+                                && (0..visited_cells.len()).contains(&pos_y))
+                                || ((pos_y == usize::MAX || pos_y == visited_cells.len())
+                                    && (0..visited_cells[0].len() + 2)
+                                        .contains(&pos_x.wrapping_add(1))) =>
+                            {
+                                print!("#")
+                            }
+                            None => print!(" "),
                         }
                     }
-                    // right border and clear rest of line
-                    println!("|\x1b[K");
+                    println!("\x1b[1m|\x1b[0m");
                 }
-                // bottom border and clear rest of screen
-                println!("{border}\x1b[J");
+
+                println!("\x1b[1m+{border}+\x1b[0m");
                 thread::sleep(Duration::from_millis(DEBUG_SLEEP_MILLIS));
             }
         }
     }
     if DEBUG {
+        // show cursor
         print!("\x1b[?25h");
     }
     visited_cells
