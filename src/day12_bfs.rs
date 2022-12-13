@@ -1,4 +1,8 @@
-use std::{collections::VecDeque, thread, time::Duration};
+use std::{
+    collections::{HashSet, VecDeque},
+    thread,
+    time::Duration,
+};
 
 use strum::IntoEnumIterator;
 
@@ -52,19 +56,20 @@ pub fn main() {
 }
 
 fn print_map(pos: Pos, map: &[Vec<Option<usize>>], path: &[Pos]) {
+    let path: HashSet<_> = path.iter().collect();
     print!("\x1b[H");
     for (y, row) in map.iter().enumerate() {
         for (x, cell) in row.iter().enumerate() {
             if (x, y) == pos {
-                print!("\x1b[42m");
+                print!("\x1b[42mO\x1b[0m");
             } else if path.contains(&(x, y)) {
-                print!("\x1b[46m");
+                print!("\x1b[46mO\x1b[0m");
+            } else {
+                match cell {
+                    Some(_) => print!("X"),
+                    None => print!("."),
+                }
             }
-            match cell {
-                Some(_) => print!("X"),
-                None => print!("\x1b[90m×"),
-            }
-            print!("\x1b[0m");
         }
         println!();
     }
