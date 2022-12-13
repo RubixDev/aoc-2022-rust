@@ -39,7 +39,6 @@ pub fn main() {
     println!("--- Day 12 ---");
     println!("Part 1: {}", part1(&step_counts, start_pos));
     println!("Part 2: {}", part2(&step_counts, &input));
-    println!();
 }
 
 fn fill_step_counts(

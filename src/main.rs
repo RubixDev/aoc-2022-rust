@@ -1,31 +1,33 @@
-mod day1;
-mod day2;
-mod day3;
-mod day4;
-mod day5;
-mod day6;
-mod day7;
-mod day7_alternative;
-mod day8;
-mod day9;
-mod day10;
-mod day11;
-mod day12;
-mod day13;
+use std::time::Instant;
 
-fn main() {
-    day1::main();
-    day2::main();
-    day3::main();
-    day4::main();
-    day5::main();
-    day6::main();
-    day7::main();
-    day7_alternative::main();
-    day8::main();
-    day9::main();
-    day10::main();
-    day11::main();
-    day12::main();
-    day13::main();
+macro_rules! run_days {
+    ($($module:ident),* $(,)?) => {
+        $(mod $module;)*
+        fn main() {
+            let start_total = Instant::now();
+            $(
+                let start = Instant::now();
+                $module::main();
+                println!("\x1b[90m{:?}\x1b[0m\n", start.elapsed());
+            )*
+            println!("\x1b[1mTotal: {:?}\x1b[0m", start_total.elapsed());
+        }
+    };
 }
+
+run_days!(
+    day1,
+    day2,
+    day3,
+    day4,
+    day5,
+    day6,
+    day7,
+    day7_alternative,
+    day8,
+    day9,
+    day10,
+    day11,
+    day12,
+    day13,
+);

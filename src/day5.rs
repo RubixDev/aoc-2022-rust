@@ -29,7 +29,6 @@ pub fn main() {
     println!("--- Day 5 ---");
     println!("Part 1: {}", part1(&stack_input, &instruction_input));
     println!("Part 2: {}", part2(&stack_input, &instruction_input));
-    println!();
 }
 
 fn part1(stack_input: &[Vec<&str>], instructions: &[(usize, usize, usize)]) -> String {

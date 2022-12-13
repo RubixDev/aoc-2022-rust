@@ -12,7 +12,6 @@ pub fn main() {
     println!("--- Day 4 ---");
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
-    println!();
 }
 
 fn part1(input: &[RangeInclusive<u8>]) -> usize {

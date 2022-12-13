@@ -106,7 +106,6 @@ pub fn main() {
     println!("--- Day 7 ---");
     println!("Part 1: {}", part1(&file_system));
     println!("Part 2: {}", part2(&file_system));
-    println!();
 }
 
 //////////////////////////////////////////////////////

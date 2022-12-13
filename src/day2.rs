@@ -10,7 +10,6 @@ pub fn main() {
     println!("--- Day 2 ---");
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
-    println!();
 }
 
 fn part1(input: &[[i64; 2]]) -> i64 {

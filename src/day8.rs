@@ -8,7 +8,6 @@ pub fn main() {
     println!("--- Day 8 ---");
     println!("Part 1: {}", part1(&input));
     println!("Part 2: {}", part2(&input));
-    println!();
 }
 
 fn part1(input: &[Vec<u8>]) -> usize {

@@ -56,7 +56,6 @@ pub fn main() {
     println!("--- Day 7 (alternative) ---");
     println!("Part 1: {}", part1(&sizes));
     println!("Part 2: {}", part2(&mut sizes));
-    println!();
 }
 
 fn calculate_sizes(

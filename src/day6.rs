@@ -5,7 +5,6 @@ pub fn main() {
     println!("--- Day 6 ---");
     println!("Part 1: {}", find_unique_window(input, 4));
     println!("Part 2: {}", find_unique_window(input, 14));
-    println!();
 }
 
 fn find_unique_window(input: &[u8], size: usize) -> usize {
