@@ -55,7 +55,9 @@ fn fill_step_counts(
             && step_counts[offset.1][offset.0].map_or(true, |count| count > current_steps + 1)
         {
             step_counts[offset.1][offset.0] = Some(current_steps + 1);
-            fill_step_counts(offset, step_counts, heightmap);
+            if heightmap[offset.1][offset.0] != 0 {
+                fill_step_counts(offset, step_counts, heightmap);
+            }
         }
     }
 }
