@@ -1,5 +1,7 @@
 use strum::IntoEnumIterator;
 
+const TEST: bool = false;
+
 #[derive(Debug, Clone, Copy, strum::EnumIter)]
 pub enum Direction {
     Up,
@@ -11,7 +13,7 @@ pub enum Direction {
 pub type Pos = (usize, usize);
 
 pub fn main() {
-    let (start_pos, end_pos, heightmap) = parse_heightmap();
+    let (start_pos, end_pos, heightmap) = parse_heightmap(TEST);
 
     let mut step_counts = vec![vec![None; heightmap[0].len()]; heightmap.len()];
     step_counts[end_pos.1][end_pos.0] = Some(0);
@@ -22,10 +24,20 @@ pub fn main() {
     println!("Part 2: {}", part2(&step_counts, &heightmap));
 }
 
-pub fn parse_heightmap() -> (Pos, Pos, Vec<Vec<u8>>) {
+pub fn parse_heightmap(test: bool) -> (Pos, Pos, Vec<Vec<u8>>) {
+    let input = match test {
+        true => {
+            "Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi"
+        }
+        false => include_str!("../inputs/day12.txt"),
+    };
     let mut start_pos = (0, 0);
     let mut end_pos = (0, 0);
-    let heightmap = include_str!("../inputs/day12.txt")
+    let heightmap = input
         .lines()
         .enumerate()
         .map(|(y, line)| {
@@ -49,11 +61,7 @@ pub fn parse_heightmap() -> (Pos, Pos, Vec<Vec<u8>>) {
     (start_pos, end_pos, heightmap)
 }
 
-fn fill_step_counts(
-    pos: Pos,
-    step_counts: &mut [Vec<Option<usize>>],
-    heightmap: &[Vec<u8>],
-) {
+fn fill_step_counts(pos: Pos, step_counts: &mut [Vec<Option<usize>>], heightmap: &[Vec<u8>]) {
     let current_steps = step_counts[pos.1][pos.0].unwrap();
     for direction in Direction::iter() {
         let offset = offset(pos, direction);
@@ -63,9 +71,7 @@ fn fill_step_counts(
             && step_counts[offset.1][offset.0].map_or(true, |count| count > current_steps + 1)
         {
             step_counts[offset.1][offset.0] = Some(current_steps + 1);
-            if heightmap[offset.1][offset.0] != 0 {
-                fill_step_counts(offset, step_counts, heightmap);
-            }
+            fill_step_counts(offset, step_counts, heightmap);
         }
     }
 }
