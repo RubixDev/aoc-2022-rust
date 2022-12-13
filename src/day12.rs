@@ -1,17 +1,31 @@
 use strum::IntoEnumIterator;
 
 #[derive(Debug, Clone, Copy, strum::EnumIter)]
-enum Direction {
+pub enum Direction {
     Up,
     Right,
     Down,
     Left,
 }
 
+pub type Pos = (usize, usize);
+
 pub fn main() {
+    let (start_pos, end_pos, heightmap) = parse_heightmap();
+
+    let mut step_counts = vec![vec![None; heightmap[0].len()]; heightmap.len()];
+    step_counts[end_pos.1][end_pos.0] = Some(0);
+    fill_step_counts(end_pos, &mut step_counts, &heightmap);
+
+    println!("--- Day 12 ---");
+    println!("Part 1: {}", part1(&step_counts, start_pos));
+    println!("Part 2: {}", part2(&step_counts, &heightmap));
+}
+
+pub fn parse_heightmap() -> (Pos, Pos, Vec<Vec<u8>>) {
     let mut start_pos = (0, 0);
     let mut end_pos = (0, 0);
-    let input: Vec<Vec<u8>> = include_str!("../inputs/day12.txt")
+    let heightmap = include_str!("../inputs/day12.txt")
         .lines()
         .enumerate()
         .map(|(y, line)| {
@@ -32,17 +46,11 @@ pub fn main() {
                 .collect()
         })
         .collect();
-    let mut step_counts = vec![vec![None; input[0].len()]; input.len()];
-    step_counts[end_pos.1][end_pos.0] = Some(0);
-    fill_step_counts(end_pos, &mut step_counts, &input);
-
-    println!("--- Day 12 ---");
-    println!("Part 1: {}", part1(&step_counts, start_pos));
-    println!("Part 2: {}", part2(&step_counts, &input));
+    (start_pos, end_pos, heightmap)
 }
 
 fn fill_step_counts(
-    pos: (usize, usize),
+    pos: Pos,
     step_counts: &mut [Vec<Option<usize>>],
     heightmap: &[Vec<u8>],
 ) {
@@ -62,7 +70,7 @@ fn fill_step_counts(
     }
 }
 
-fn offset((x, y): (usize, usize), direction: Direction) -> (usize, usize) {
+pub fn offset((x, y): Pos, direction: Direction) -> Pos {
     match direction {
         Direction::Up => (x, y.wrapping_sub(1)),
         Direction::Down => (x, y + 1),
@@ -73,11 +81,11 @@ fn offset((x, y): (usize, usize), direction: Direction) -> (usize, usize) {
 
 //////////////////////////////////
 
-fn part1(step_counts: &[Vec<Option<usize>>], start_pos: (usize, usize)) -> usize {
+pub fn part1(step_counts: &[Vec<Option<usize>>], start_pos: Pos) -> usize {
     step_counts[start_pos.1][start_pos.0].unwrap()
 }
 
-fn part2(step_counts: &[Vec<Option<usize>>], input: &[Vec<u8>]) -> usize {
+pub fn part2(step_counts: &[Vec<Option<usize>>], input: &[Vec<u8>]) -> usize {
     input
         .iter()
         .enumerate()
