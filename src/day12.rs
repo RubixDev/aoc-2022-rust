@@ -1,6 +1,10 @@
 use strum::IntoEnumIterator;
 
+use crate::day12_bfs::print_map;
+
 const TEST: bool = false;
+const DEBUG: bool = false;
+const DEBUG_SLEEP_MILLIS: u64 = 0;
 
 #[derive(Debug, Clone, Copy, strum::EnumIter)]
 pub enum Direction {
@@ -17,7 +21,14 @@ pub fn main() {
 
     let mut step_counts = vec![vec![None; heightmap[0].len()]; heightmap.len()];
     step_counts[end_pos.1][end_pos.0] = Some(0);
-    fill_step_counts(end_pos, &mut step_counts, &heightmap);
+
+    if DEBUG {
+        print!("\x1b[2J\x1b[?25l");
+    }
+    fill_step_counts(end_pos, &mut step_counts, &heightmap, &mut vec![end_pos]);
+    if DEBUG {
+        print!("\x1b[?25h");
+    }
 
     println!("--- Day 12 ---");
     println!("Part 1: {}", part1(&step_counts, start_pos));
@@ -61,7 +72,12 @@ abdefghi"
     (start_pos, end_pos, heightmap)
 }
 
-fn fill_step_counts(pos: Pos, step_counts: &mut [Vec<Option<usize>>], heightmap: &[Vec<u8>]) {
+fn fill_step_counts(
+    pos: Pos,
+    step_counts: &mut [Vec<Option<usize>>],
+    heightmap: &[Vec<u8>],
+    path: &mut Vec<Pos>,
+) {
     let current_steps = step_counts[pos.1][pos.0].unwrap();
     for direction in Direction::iter() {
         let offset = offset(pos, direction);
@@ -71,7 +87,19 @@ fn fill_step_counts(pos: Pos, step_counts: &mut [Vec<Option<usize>>], heightmap:
             && step_counts[offset.1][offset.0].map_or(true, |count| count > current_steps + 1)
         {
             step_counts[offset.1][offset.0] = Some(current_steps + 1);
-            fill_step_counts(offset, step_counts, heightmap);
+
+            if DEBUG {
+                print_map(
+                    offset,
+                    step_counts,
+                    &path.iter().copied().collect(),
+                    DEBUG_SLEEP_MILLIS,
+                );
+                path.push(offset);
+            }
+
+            fill_step_counts(offset, step_counts, heightmap, path);
+            path.pop();
         }
     }
 }

@@ -35,7 +35,12 @@ pub fn main() {
             step_counts[oy][ox] = Some(path.len());
 
             if DEBUG {
-                print_map((ox, oy), &step_counts, &path);
+                print_map(
+                    (ox, oy),
+                    &step_counts,
+                    &path.iter().copied().collect(),
+                    DEBUG_SLEEP_MILLIS,
+                );
             }
 
             if (ox, oy) == start_pos {
@@ -55,8 +60,7 @@ pub fn main() {
     println!("Part 2: {}", part2(&step_counts, &heightmap));
 }
 
-fn print_map(pos: Pos, map: &[Vec<Option<usize>>], path: &[Pos]) {
-    let path: HashSet<_> = path.iter().collect();
+pub fn print_map(pos: Pos, map: &[Vec<Option<usize>>], path: &HashSet<Pos>, sleep_millis: u64) {
     print!("\x1b[H");
     for (y, row) in map.iter().enumerate() {
         for (x, cell) in row.iter().enumerate() {
@@ -73,5 +77,5 @@ fn print_map(pos: Pos, map: &[Vec<Option<usize>>], path: &[Pos]) {
         }
         println!();
     }
-    thread::sleep(Duration::from_millis(DEBUG_SLEEP_MILLIS));
+    thread::sleep(Duration::from_millis(sleep_millis));
 }
