@@ -31,4 +31,5 @@ run_days!(
     day12,
     day12_bfs,
     day13,
+    day14,
 );
