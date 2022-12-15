@@ -1,4 +1,5 @@
 use std::{
+    collections::{HashSet, VecDeque},
     fmt::{self, Display, Formatter},
     thread,
     time::Duration,
@@ -7,8 +8,6 @@ use std::{
 use itertools::Itertools;
 
 const TEST: bool = false;
-const DEBUG_PART_1: bool = false;
-const DEBUG_PART_2: bool = false;
 const DEBUG_SLEEP_MILLIS: u64 = 0;
 
 type Pos = (usize, usize);
@@ -74,17 +73,18 @@ pub fn main() {
         }
     }
 
-    if DEBUG_PART_1 || DEBUG_PART_2 {
-        // clear screen
-        print!("\x1b[2J");
-    }
-
-    println!("--- Day 14 ---");
-    println!("Part 1: {}", part1(&map));
-    println!("Part 2: {}", part2(&map));
+    // clear screen
+    print!("\x1b[2J");
+    part2(&map);
 }
 
-fn try_move(map: &[Vec<Tile>], pos: &mut Pos) -> bool {
+fn try_move(map: &mut [Vec<Tile>], pos: &mut Pos) -> bool {
+    if pos.0 + 1 == map[0].len() {
+        for row in map.iter_mut() {
+            row.push(Tile::Air);
+        }
+        *map.last_mut().unwrap().last_mut().unwrap() = Tile::Rock;
+    }
     if map
         .get(pos.1 + 1)
         .and_then(|row| row.get(pos.0))
@@ -111,67 +111,39 @@ fn try_move(map: &[Vec<Tile>], pos: &mut Pos) -> bool {
     true
 }
 
-fn part1(map: &[Vec<Tile>]) -> usize {
-    let mut map = map.to_vec();
-    let mut count = 0;
-    'outer: loop {
-        let mut pos = (500, 0);
-        loop {
-            if !(0..map[0].len()).contains(&pos.0) || !(0..map.len()).contains(&pos.1) {
-                break 'outer;
-            } else if !try_move(&map, &mut pos) {
-                break;
-            }
+fn move_all(map: &mut [Vec<Tile>], queue: &mut VecDeque<Pos>) -> bool {
+    let mut pop_count = 0;
+    for pos in queue.iter_mut() {
+        if !try_move(map, pos) {
+            pop_count += 1;
         }
+    }
+    if pop_count > 0 && pop_count == queue.len() {
+        queue.clear();
+        map[0][500] = Tile::Sand;
+        return false;
+    }
+    for pos in queue.drain(..pop_count) {
         map[pos.1][pos.0] = Tile::Sand;
-        count += 1;
-        if DEBUG_PART_1 {
-            print_map(&map);
-        }
     }
-    if DEBUG_PART_2 {
-        print_map(&map);
-    }
-    count
+    queue.push_back((500, 0));
+    true
 }
 
-fn part2(map: &[Vec<Tile>]) -> usize {
+fn part2(map: &[Vec<Tile>]) {
     let mut map = map.to_vec();
     for tile in map.last_mut().unwrap() {
         *tile = Tile::Rock;
     }
-    let mut count = 0;
-    let mut reached_end = false;
-    while !reached_end {
-        let mut pos = (500, 0);
-        loop {
-            // extend map to the right if necessary
-            if pos.0 + 1 == map[0].len() {
-                for row in &mut map {
-                    row.push(Tile::Air);
-                }
-                *map.last_mut().unwrap().last_mut().unwrap() = Tile::Rock;
-            }
-
-            // move sand unit
-            if !try_move(&map, &mut pos) {
-                reached_end = pos == (500, 0);
-                break;
-            }
-        }
-        if DEBUG_PART_2 {
-            print_map(&map);
-        }
-        map[pos.1][pos.0] = Tile::Sand;
-        count += 1;
+    let mut queue = VecDeque::new();
+    while move_all(&mut map, &mut queue) {
+        print_map(&map, &queue)
     }
-    if DEBUG_PART_2 {
-        print_map(&map);
-    }
-    count
+    print_map(&map, &queue);
 }
 
-fn print_map(map: &[Vec<Tile>]) {
+fn print_map(map: &[Vec<Tile>], queue: &VecDeque<Pos>) {
+    let queue: HashSet<_> = queue.iter().collect();
     // go to top left
     print!("\x1b[H");
     // get left-most non-air tile
@@ -182,9 +154,13 @@ fn print_map(map: &[Vec<Tile>]) {
         .map(|row| row.iter().take_while(|tile| tile == &&Tile::Air).count())
         .min()
         .unwrap();
-    for row in map {
-        for tile in &row[x_min..] {
-            print!("{tile}");
+    for (y, row) in map.iter().enumerate() {
+        for (x, tile) in row.iter().enumerate().skip(x_min) {
+            if queue.contains(&(x, y)) {
+                print!("\x1b[41m \x1b[0m");
+            } else {
+                print!("{tile}");
+            }
         }
         println!();
     }
